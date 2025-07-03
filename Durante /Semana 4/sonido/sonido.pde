@@ -4,23 +4,21 @@ import processing.sound.FFT;
 SoundFile soundfile;
 FFT fft;
 
-int timeLapsed;
-
 //# bandas de frecuencia
 int bands = 256;
 
 //array guardar el espectro de nuestras frecuencias
 float[] spectrum = new float[bands];
 
-int x = 0;
-int y = 70;
+//detectar cambios
+float prevLevel = 0;
 
-float radio;
+//iniciar con cuadrado
+String currentShape = "square";
 
 void setup() {
   size(1000, 1000);
-  background(0);
-  
+  background(255);
   rectMode(CENTER);
 
   //importar cancion
@@ -37,37 +35,56 @@ void setup() {
 }
 
 void draw() {
-  timeLapsed++;
-  println(timeLapsed);
-  
+  //fondo blanco
+  fill(255, 255, 255, 10);
+  rect(0, 0, width * 2, height * 2);
+
   fft.analyze(spectrum);
 
-  float level = spectrum[50] * 100;
-  radio = (level * width);
+  //fuerza del espectro
+  float level = spectrum[50] * 500;
+  //tamaño del objeto segun nivel
+  float size = level * width;
 
-  //fill(255, 30);
-  //stroke(random(0, 100), random(100, 255), random(200, 255));
-  noStroke();
+  //detectar cambios bruscos de nivel
+  float change = abs(level - prevLevel);
 
-  if (random(1) < 0.5) {
-    fill(255, 0, 0, 100); // rojo con transparencia
+  //cambio forma segun nivel
+  if (change > 0.5) {
+    if (change > 1.5) {
+      //cambio fuerte
+      currentShape = "circle";
+    } else {
+      //cambio normal
+      currentShape = "rectangle";
+    }
   } else {
-    fill(0, 0, 255, 100); // azul con transparencia
+    //sin cambio
+    currentShape = "square";
   }
 
-  float ancho = radio;
-  float alto = radio / 2.0;
+  noStroke();
+  //colores del video
+  fill(lerpColor(color(30, 30, 230, 120), color(220, 20, 40, 120), level / 2.0));
 
-  rect(x, y, ancho, alto);
+  float cx = width / 2;
+  float cy = height / 2;
 
-  // controlar dibujo eje vertical
-  if (x > width) {
-    x = 0;
-    y = y + 10;
+  //forma en la mitad
+  switch(currentShape) {
+  case "square":
+    //cuadrado
+    rect(cx, cy, size, size);
+    break;
+  case "circle":
+    //circulo
+    ellipse(cx, cy, size, size);
+    break;
+  case "rectangle":
+    //rectangulo
+    rect(cx, cy, size * 1.5, size * 0.5);
+    break;
   }
-  //controlar dibujo eje horizontal
-  if (y > height) {
-    y = 70;
-    background(0);
-  }
+  //detectar los cambios de ritmo
+  prevLevel = level;
 }
